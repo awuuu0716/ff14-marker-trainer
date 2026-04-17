@@ -53,3 +53,31 @@ export const LEVEL_CONFIG = {
     counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6],
   },
 } as const;
+
+export const testQuestions: Question[] = [
+  {
+    type: "D",
+    filename: "D.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+];

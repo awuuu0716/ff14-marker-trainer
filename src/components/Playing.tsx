@@ -8,35 +8,6 @@ import {
 } from "../types";
 import MarkerDisplay from "./MarkerDisplay";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const testQuestions: Question[] = [
-  {
-    type: "D",
-    filename: "D.png",
-    crop: "",
-  },
-  {
-    type: "2",
-    filename: "2.png",
-    crop: "",
-  },
-  {
-    type: "2",
-    filename: "2.png",
-    crop: "",
-  },
-  {
-    type: "2",
-    filename: "2.png",
-    crop: "",
-  },
-  {
-    type: "2",
-    filename: "2.png",
-    crop: "",
-  },
-];
-
 type Props = {
   stage: number;
   questions: Question[];
