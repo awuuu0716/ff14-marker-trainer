@@ -1,22 +1,18 @@
 import type { FC } from "react";
-import type { Level } from "../types";
+import type { GameState, Level } from "../types";
 import { ArrowRight, RefreshCw } from "lucide-react";
 
 type Props = {
-  accuracy: number;
-  results: boolean[];
-  currentLevel: Level;
+  state: GameState;
   handleLevelStart: (level: Level) => void;
   goToMenu: () => void;
 };
 
-const Result: FC<Props> = ({
-  currentLevel,
-  accuracy,
-  results,
-  handleLevelStart,
-  goToMenu,
-}) => {
+const Result: FC<Props> = ({ state, handleLevelStart, goToMenu }) => {
+  const { currentLevel, results } = state;
+
+  const accuracy = (state.results.filter(Boolean).length / 10) * 100;
+
   return (
     <div className="text-center py-8 flex-1 flex flex-col justify-center">
       <h2 className="text-3xl font-bold mb-2">訓練完成</h2>

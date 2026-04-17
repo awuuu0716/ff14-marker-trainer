@@ -16,8 +16,6 @@ export default function MarkerTrainer() {
     loadProgress,
   } = useGameEngine();
 
-  const accuracy = (state.results.filter(Boolean).length / 10) * 100;
-
   // 如果資源還沒載入好，顯示讀取條
   if (!isAssetsLoaded) {
     return <Loading loadProgress={loadProgress} />;
@@ -26,34 +24,21 @@ export default function MarkerTrainer() {
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100 flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl min-h-150 flex flex-col">
-        <GameHeader timeLeft={state.timeLeft} status={state.status} />
+        <GameHeader state={state} />
         {/* 初始畫面 */}
         {state.status === "idle" && (
           <Menu handleLevelStart={handleLevelStart} />
         )}
         {/* 倒數畫面 */}
-        {state.status === "countdown" && (
-          <ReadyCheck
-            currentLevel={state.currentLevel}
-            countdownValue={state.countdownValue}
-          />
-        )}
+        {state.status === "countdown" && <ReadyCheck state={state} />}
         {/* 遊戲進行畫面 */}
         {state.status === "playing" && (
-          <Playing
-            stage={state.stage}
-            questions={state.questions}
-            currentLevel={state.currentLevel}
-            userInput={state.userInput}
-            handleInput={handleInput}
-          />
+          <Playing state={state} handleInput={handleInput} />
         )}
         {/* 結果畫面 */}
         {state.status === "result" && (
           <Result
-            accuracy={accuracy}
-            results={state.results}
-            currentLevel={state.currentLevel}
+            state={state}
             handleLevelStart={handleLevelStart}
             goToMenu={goToMenu}
           />

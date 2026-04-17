@@ -26,10 +26,22 @@ export const COLORS: Record<MarkerType, string> = {
   4: "border-purple-500",
 };
 
+export interface GameState {
+  currentLevel: Level;
+  stage: number;
+  questions: Question[];
+  userInput: MarkerType[];
+  status: GameStatus;
+  countdownValue: number;
+  results: boolean[];
+  timeLeft: number;
+  isError: boolean;
+}
+
 export const LEVEL_CONFIG = {
   1: {
     name: "光標初學者學堂",
-    time: 500,
+    time: 10,
     counts: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
   },
   2: {

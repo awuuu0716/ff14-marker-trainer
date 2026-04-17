@@ -40,6 +40,7 @@ export function useGameEngine() {
     countdownValue: 4,
     results: [] as boolean[],
     timeLeft: 5,
+    isError: false,
   });
   const [isAssetsLoaded, setIsAssetsLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
@@ -168,17 +169,30 @@ export function useGameEngine() {
   };
 
   const handleInput = (key: MarkerType) => {
-    if (state.status !== "playing") return;
-    const currentIndex = state.userInput.length;
-    if (key !== state.questions[currentIndex].type) {
-      finishStage(false);
-      return;
-    }
-    if (state.userInput.length + 1 === state.questions.length) {
-      finishStage(true);
-    } else {
-      setState((prev) => ({ ...prev, userInput: [...prev.userInput, key] }));
-    }
+    if (state.status !== "playing" || state.isError) return; // 錯誤動畫中禁止輸入
+
+    setState((prev) => {
+      const currentIndex = prev.userInput.length;
+
+      // --- 判定錯誤 ---
+      if (key !== prev.questions[currentIndex].type) {
+        // 先顯示錯誤特效
+        setTimeout(() => {
+          // 400ms 後才真正判定失敗，進入下一關或結束
+          finishStage(false);
+          setState((s) => ({ ...s, isError: false }));
+        }, 400);
+
+        return { ...prev, isError: true };
+      }
+
+      // --- 判定正確 ---
+      const nextInput = [...prev.userInput, key];
+      if (nextInput.length === prev.questions.length) {
+        setTimeout(() => finishStage(true), 0);
+      }
+      return { ...prev, userInput: nextInput };
+    });
   };
 
   const goToMenu = () => setState((prev) => ({ ...prev, status: "idle" }));

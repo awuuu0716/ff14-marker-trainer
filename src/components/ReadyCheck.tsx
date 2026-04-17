@@ -1,10 +1,9 @@
 import type { FC } from "react";
-import { LEVEL_CONFIG, type Level } from "../types";
+import { LEVEL_CONFIG, type GameState } from "../types";
 
-const ReadyCheck: FC<{ currentLevel: Level; countdownValue: number }> = ({
-  currentLevel,
-  countdownValue,
-}) => {
+const ReadyCheck: FC<{ state: GameState }> = ({ state }) => {
+  const { currentLevel, countdownValue } = state;
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center">
       <div className="text-zinc-500 mb-12 text-xl font-bold tracking-widest uppercase">
