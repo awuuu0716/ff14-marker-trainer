@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Trophy, RefreshCw, ArrowRight, Timer } from "lucide-react";
+import { RefreshCw, ArrowRight, Timer as TimerIcon } from "lucide-react";
 
-// --- 類型定義 ---
+// ==========================================
+// 1. Types & Constants
+// ==========================================
 type MarkerType = "A" | "B" | "C" | "D" | "1" | "2" | "3" | "4";
 type Level = 1 | 2 | 3 | 4 | 5;
 type CropType =
@@ -10,25 +12,16 @@ type CropType =
   | "object-left-bottom"
   | "object-right-bottom"
   | "";
+type GameStatus = "idle" | "countdown" | "playing" | "result";
 
 interface Question {
   type: MarkerType;
   crop: CropType;
+  filename: string;
 }
 
-interface GameState {
-  currentLevel: Level;
-  stage: number; // 1-10
-  questions: Question[]; // 改為 Question 物件陣列
-  userInput: MarkerType[];
-  status: "idle" | "playing" | "result";
-  results: boolean[]; // 紀錄每關是否正確
-  timeLeft: number;
-}
-
-// --- 常數配置 ---
 const MARKERS: MarkerType[] = ["A", "B", "C", "D", "1", "2", "3", "4"];
-const COLORS = {
+const COLORS: Record<MarkerType, string> = {
   A: "border-red-500",
   1: "border-red-500",
   B: "border-yellow-500",
@@ -40,32 +33,53 @@ const COLORS = {
 };
 
 const LEVEL_CONFIG = {
-  1: { time: 5, counts: [1, 1, 1, 2, 2, 2, 3, 3, 3, 3], type: "main" },
-  2: { time: 5, counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6], type: "main" },
-  3: { time: 5, counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6], type: "bottom" },
-  4: { time: 5, counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6], type: "mixed" },
-  5: { time: 3, counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6], type: "crop" },
-};
+  1: {
+    name: "光標初學者學堂",
+    time: 5,
+    counts: [1, 1, 1, 2, 2, 2, 3, 3, 3, 3],
+  },
+  2: {
+    name: "光標殲滅戰",
+    time: 5,
+    counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6],
+  },
+  3: {
+    name: "極光標殲滅戰",
+    time: 5,
+    counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6],
+  },
+  4: {
+    name: "零式光標殲滅戰",
+    time: 5,
+    counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6],
+  },
+  5: {
+    name: "絕光標殲滅戰",
+    time: 5,
+    counts: [3, 3, 3, 5, 5, 5, 6, 6, 6, 6],
+  },
+} as const;
 
-export default function MarkerTrainer() {
-  const [state, setState] = useState<GameState>({
-    currentLevel: 1,
+// ==========================================
+// 2. Custom Hooks (Logic)
+// ==========================================
+function useGameEngine() {
+  const [state, setState] = useState({
+    currentLevel: 1 as Level,
     stage: 1,
-    questions: [],
-    userInput: [],
-    status: "idle",
-    results: [],
+    questions: [] as Question[],
+    userInput: [] as MarkerType[],
+    status: "idle" as GameStatus,
+    countdownValue: 4,
+    results: [] as boolean[],
     timeLeft: 5,
   });
 
   const timerRef = useRef<number | null>(null);
 
-  // --- 遊戲邏輯 ---
-
   const startStage = useCallback((level: Level, stageNum: number) => {
     const config = LEVEL_CONFIG[level];
     const count = config.counts[stageNum - 1];
-
     const crops: CropType[] = [
       "object-left-top",
       "object-right-top",
@@ -75,10 +89,15 @@ export default function MarkerTrainer() {
 
     const newQuestions: Question[] = Array.from({ length: count }, () => {
       const type = MARKERS[Math.floor(Math.random() * MARKERS.length)];
-      // 只有第五階才隨機選一個角落，其餘為空
+      const filename =
+        level === 3
+          ? `${type}-bottom.png`
+          : level >= 4 && Math.random() > 0.5
+            ? `${type}-bottom.png`
+            : `${type}.png`;
       const crop =
         level === 5 ? crops[Math.floor(Math.random() * crops.length)] : "";
-      return { type, crop };
+      return { type, filename, crop };
     });
 
     setState((prev) => ({
@@ -91,58 +110,39 @@ export default function MarkerTrainer() {
     }));
   }, []);
 
-  const handleLevelStart = (level: Level) => {
-    setState((prev) => ({
-      ...prev,
-      currentLevel: level,
-      results: [],
-      stage: 1,
-    }));
-    startStage(level, 1);
-  };
-
-  const handleInput = (key: MarkerType) => {
-    if (state.status !== "playing") return;
-
-    const nextInput = [...state.userInput, key];
-    const currentIndex = state.userInput.length;
-
-    // 檢查是否點對
-    if (key !== state.questions[currentIndex].type) {
-      // 點錯直接判定該關失敗
-      finishStage(false);
-      return;
-    }
-
-    if (nextInput.length === state.questions.length) {
-      // 全對，進入下一關
-      finishStage(true);
-    } else {
-      setState((prev) => ({ ...prev, userInput: nextInput }));
-    }
-  };
-
   const finishStage = useCallback(
     (isCorrect: boolean) => {
       if (timerRef.current) clearInterval(timerRef.current);
-
-      const newResults = [...state.results, isCorrect];
-
-      if (state.stage < 10) {
-        setState((prev) => ({ ...prev, results: newResults }));
-        startStage(state.currentLevel, state.stage + 1);
-      } else {
-        setState((prev) => ({
-          ...prev,
-          results: newResults,
-          status: "result",
-        }));
-      }
+      setState((prev) => {
+        const newResults = [...prev.results, isCorrect];
+        if (prev.stage < 10) {
+          // 非同步調用 startStage 避免 Effect 衝突
+          setTimeout(() => startStage(prev.currentLevel, prev.stage + 1), 0);
+          return { ...prev, results: newResults };
+        }
+        return { ...prev, results: newResults, status: "result" };
+      });
     },
-    [startStage, state.currentLevel, state.results, state.stage],
+    [startStage],
   );
 
-  // 計時器邏輯
+  // 倒數邏輯
+  useEffect(() => {
+    if (state.status !== "countdown") return;
+    const timer = setTimeout(() => {
+      if (state.countdownValue > 1) {
+        setState((prev) => ({
+          ...prev,
+          countdownValue: prev.countdownValue - 1,
+        }));
+      } else {
+        startStage(state.currentLevel, 1);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [state.status, state.countdownValue, state.currentLevel, startStage]);
+
+  // 遊戲計時器
   useEffect(() => {
     if (state.status === "playing" && state.timeLeft > 0) {
       timerRef.current = window.setInterval(() => {
@@ -158,84 +158,174 @@ export default function MarkerTrainer() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [state.status, state.stage, state.timeLeft, finishStage]);
+  }, [state.status, state.stage, finishStage]);
 
-  // --- 計算結果 ---
+  const handleLevelStart = (level: Level) => {
+    setState((prev) => ({
+      ...prev,
+      currentLevel: level,
+      status: "countdown",
+      countdownValue: 4,
+      results: [],
+      stage: 1,
+    }));
+  };
+
+  const handleInput = (key: MarkerType) => {
+    if (state.status !== "playing") return;
+    const currentIndex = state.userInput.length;
+    if (key !== state.questions[currentIndex].type) {
+      finishStage(false);
+      return;
+    }
+    if (state.userInput.length + 1 === state.questions.length) {
+      finishStage(true);
+    } else {
+      setState((prev) => ({ ...prev, userInput: [...prev.userInput, key] }));
+    }
+  };
+
+  const goToMenu = () => setState((prev) => ({ ...prev, status: "idle" }));
+
+  return { state, handleLevelStart, handleInput, goToMenu };
+}
+
+// ==========================================
+// 3. Sub-Components (UI)
+// ==========================================
+
+const MarkerDisplay = ({
+  question,
+  level,
+  isDone,
+}: {
+  question: Question;
+  level: Level;
+  isDone: boolean;
+}) => (
+  <div
+    className={`relative w-24 h-24 rounded-lg overflow-hidden border-2 transition-all duration-300 
+    ${isDone ? "opacity-20 grayscale scale-95 border-transparent" : "opacity-100 border-zinc-700 bg-zinc-800 shadow-xl"}`}
+  >
+    <img
+      src={`/assets/${question.filename}`}
+      alt={question.type}
+      className={`w-full h-full object-cover transition-transform ${level === 5 ? `scale-[2.5] ${question.crop}` : "scale-100"}`}
+    />
+    {level === 5 && !isDone && (
+      <div className="absolute inset-0 pointer-events-none bg-linear-to-b from-transparent via-white/5 to-transparent animate-pulse" />
+    )}
+  </div>
+);
+
+const GameHeader = ({
+  timeLeft,
+  status,
+}: {
+  timeLeft: number;
+  status: GameStatus;
+}) => (
+  <div className="flex justify-center items-center mb-8 h-10">
+    {status === "playing" && (
+      <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-full border border-zinc-700">
+        <TimerIcon
+          size={18}
+          className={
+            timeLeft < 1.5 ? "text-red-500 animate-pulse" : "text-emerald-400"
+          }
+        />
+        <span className="font-mono font-bold w-12">{timeLeft.toFixed(1)}s</span>
+      </div>
+    )}
+  </div>
+);
+
+// ==========================================
+// 4. Main Component
+// ==========================================
+export default function MarkerTrainer() {
+  const { state, handleLevelStart, handleInput, goToMenu } = useGameEngine();
   const accuracy = (state.results.filter(Boolean).length / 10) * 100;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100 flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
-              FF14 副本光標訓練
-            </h1>
-            <p className="text-zinc-400 text-sm">
-              提升你的 ABCD / 1234 辨識反應
-            </p>
-          </div>
-          {state.status === "playing" && (
-            <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-full">
-              <Timer
-                size={18}
-                className={
-                  state.timeLeft < 1.5
-                    ? "text-red-500 animate-pulse"
-                    : "text-emerald-400"
-                }
-              />
-              <span className="font-mono font-bold w-12">
-                {state.timeLeft.toFixed(1)}s
-              </span>
-            </div>
-          )}
-        </div>
+      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl min-h-125 flex flex-col">
+        <GameHeader timeLeft={state.timeLeft} status={state.status} />
 
-        {/* 遊戲主畫面 */}
+        {/* 初始畫面 */}
         {state.status === "idle" && (
-          <div className="text-center py-12">
-            <Trophy className="mx-auto mb-4 text-yellow-500" size={48} />
-            <h2 className="text-xl mb-6">準備好挑戰了嗎？</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {[1, 2, 3, 4, 5].map((l) => (
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-8 text-white tracking-widest">
+              光標殲滅戰 2.0
+            </h1>
+            <div className="mb-10 p-2 bg-zinc-800/50 rounded-2xl border border-zinc-700 shadow-inner">
+              <img
+                src="/assets/reference.jpg"
+                alt="Reference"
+                className="w-full rounded-lg shadow-lg"
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-4 max-w-lg mx-auto">
+              {Object.entries(LEVEL_CONFIG).map(([key, config]) => (
                 <button
-                  key={l}
-                  onClick={() => handleLevelStart(l as Level)}
-                  className="bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg transition-colors border border-zinc-700"
+                  key={key}
+                  onClick={() => handleLevelStart(parseInt(key) as Level)}
+                  className="group flex flex-col items-start p-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-all border border-zinc-700 hover:border-emerald-500/50"
                 >
-                  開始 第 {l} 階 {l === 5 && "(限時 3s + 局部顯示)"}
+                  <div className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
+                    {config.name}
+                  </div>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {state.status === "playing" && (
-          <div className="flex flex-col items-center">
-            <div className="text-zinc-500 mb-4">關卡: {state.stage} / 10</div>
+        {/* 倒數畫面 */}
+        {state.status === "countdown" && (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="text-zinc-500 mb-12 text-xl font-bold tracking-widest uppercase">
+              準備進入：{LEVEL_CONFIG[state.currentLevel].name}
+            </div>
+            <div className="relative">
+              <img
+                key={state.countdownValue}
+                src={`/assets/${state.countdownValue}.png`}
+                alt={String(state.countdownValue)}
+                className="w-40 h-40 object-contain animate-[ping_1s_infinite] drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-6xl font-black text-white">
+                  {state.countdownValue}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
-            {/* 標記顯示區 */}
-            <div className="flex flex-wrap justify-center gap-4 mb-12 min-h-30">
+        {/* 遊戲進行畫面 */}
+        {state.status === "playing" && (
+          <div className="flex flex-col items-center flex-1">
+            <div className="text-zinc-500 mb-4 font-mono text-sm tracking-widest">
+              STAGE {state.stage} / 10
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 mb-4 min-h-30">
               {state.questions.map((q, idx) => (
                 <MarkerDisplay
-                  question={q}
                   key={`${state.stage}-${idx}`}
+                  question={q}
                   level={state.currentLevel}
                   isDone={idx < state.userInput.length}
                 />
               ))}
             </div>
-
-            {/* 輸入按鈕區 */}
-            <div className="grid grid-cols-4 gap-4 w-full">
+            <div className="grid grid-cols-4 gap-4 w-full mt-auto">
               {MARKERS.map((m) => (
                 <button
                   key={m}
                   onClick={() => handleInput(m)}
                   className={`py-6 rounded-xl text-2xl font-black border-b-4 active:border-b-0 active:translate-y-1 transition-all
-                    ${COLORS[m as keyof typeof COLORS]} bg-zinc-800 border-zinc-950 hover:bg-zinc-700 text-white`}
+                    ${COLORS[m]} bg-zinc-800 border-zinc-950 hover:bg-zinc-700 text-white`}
                 >
                   {m}
                 </button>
@@ -244,82 +334,47 @@ export default function MarkerTrainer() {
           </div>
         )}
 
+        {/* 結果畫面 */}
         {state.status === "result" && (
-          <div className="text-center py-8">
+          <div className="text-center py-8 flex-1 flex flex-col justify-center">
             <h2 className="text-3xl font-bold mb-2">訓練完成</h2>
-            <div className="text-5xl font-black text-emerald-400 mb-6">
+            <div className="text-6xl font-black text-emerald-400 mb-6 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
               {accuracy}%
             </div>
-            <p className="text-zinc-400 mb-8">
-              答對題數: {state.results.filter(Boolean).length} / 10
-            </p>
-
-            <div className="flex gap-4 justify-center">
+            <div className="text-zinc-400 mb-10 text-lg">
+              答對題數:{" "}
+              <span className="text-white font-mono">
+                {state.results.filter(Boolean).length}
+              </span>{" "}
+              / 10
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center px-4">
               <button
                 onClick={() => handleLevelStart(state.currentLevel)}
-                className="flex items-center gap-2 bg-zinc-800 px-6 py-3 rounded-lg hover:bg-zinc-700 transition-colors"
+                className="btn-secondary flex-1"
               >
-                <RefreshCw size={18} /> 重試此階
+                <RefreshCw size={20} /> 重試此階
               </button>
-
               {accuracy >= 80 && state.currentLevel < 5 && (
                 <button
                   onClick={() =>
                     handleLevelStart((state.currentLevel + 1) as Level)
                   }
-                  className="flex items-center gap-2 bg-emerald-600 px-6 py-3 rounded-lg hover:bg-emerald-500 transition-colors"
+                  className="btn-primary flex-1"
                 >
-                  下一階 <ArrowRight size={18} />
+                  下一階 <ArrowRight size={20} />
                 </button>
               )}
-
-              {accuracy < 80 && (
-                <button
-                  onClick={() =>
-                    setState((prev) => ({ ...prev, status: "idle" }))
-                  }
-                  className="bg-zinc-800 px-6 py-3 rounded-lg hover:bg-zinc-700"
-                >
-                  返回選單
-                </button>
-              )}
+              <button
+                onClick={goToMenu}
+                className="btn-secondary flex-1 text-zinc-300"
+              >
+                返回選單
+              </button>
             </div>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function MarkerDisplay({
-  question,
-  level,
-  isDone,
-}: {
-  question: Question;
-  level: Level;
-  isDone: boolean;
-}) {
-  const { type, crop } = question;
-
-  let filename = `${type}.png`;
-  if (level === 3) filename = `${type}-bottom.png`;
-  if (level === 4) {
-    // 這裡雖然也有 random，但因為 MarkerDisplay 在每一關會重新掛載(key變了)
-    // 且這只是決定路徑，相對穩定。如果也要嚴格，建議同樣在 startStage 決定好。
-    // filename = question.filename; // 建議做法
-  }
-
-  return (
-    <div
-      className={`relative w-24 h-24 rounded-lg overflow-hidden border-2 transition-opacity duration-300
-      ${isDone ? "opacity-20 grayscale" : "opacity-100 border-zinc-700 bg-zinc-800 shadow-lg"}`}
-    >
-      <img
-        src={`/assets/${filename}`}
-        className={`w-full h-full object-cover ${level === 5 ? `scale-[2.5] ${crop}` : ""}`}
-        alt=""
-      />
     </div>
   );
 }

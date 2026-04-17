@@ -13,8 +13,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -110,4 +110,12 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.btn-primary {
+  @apply flex items-center justify-center gap-2 bg-emerald-600 px-6 py-4 rounded-xl hover:bg-emerald-500 shadow-lg active:scale-95 font-bold text-lg transition-all;
+}
+
+.btn-secondary {
+  @apply flex items-center justify-center gap-2 bg-zinc-800 px-6 py-4 rounded-xl hover:bg-zinc-700 border border-zinc-700 active:scale-95 font-bold transition-all;
 }
