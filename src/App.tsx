@@ -208,7 +208,7 @@ const MarkerDisplay = ({
     ${isDone ? "opacity-20 grayscale scale-95 border-transparent" : "opacity-100 border-zinc-700 bg-zinc-800 shadow-xl"}`}
   >
     <img
-      src={`/assets/${question.filename}`}
+      src={`${import.meta.env.BASE_URL}assets/${question.filename}`}
       alt={question.type}
       className={`w-full h-full object-cover transition-transform ${level === 5 ? `scale-[2.5] ${question.crop}` : "scale-100"}`}
     />
@@ -260,7 +260,7 @@ export default function MarkerTrainer() {
             </h1>
             <div className="mb-10 p-2 bg-zinc-800/50 rounded-2xl border border-zinc-700 shadow-inner">
               <img
-                src="/assets/reference.jpg"
+                src={`${import.meta.env.BASE_URL}assets/reference.jpg`}
                 alt="Reference"
                 className="w-full rounded-lg shadow-lg"
               />
@@ -290,7 +290,7 @@ export default function MarkerTrainer() {
             <div className="relative">
               <img
                 key={state.countdownValue}
-                src={`/assets/${state.countdownValue}.png`}
+                src={`${import.meta.env.BASE_URL}assets/${state.countdownValue}.png`}
                 alt={String(state.countdownValue)}
                 className="w-40 h-40 object-contain animate-[ping_1s_infinite] drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"
               />

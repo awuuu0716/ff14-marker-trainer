@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pregh-deploy": "pnpm build",
-    "gh-deploy": "gh-pages -d dist"
+    "prerelease": "pnpm build",
+    "release": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
