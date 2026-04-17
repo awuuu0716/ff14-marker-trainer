@@ -53,7 +53,7 @@ export default function MarkerTrainer() {
           <Result
             accuracy={accuracy}
             results={state.results}
-            currentLevel={2}
+            currentLevel={state.currentLevel}
             handleLevelStart={handleLevelStart}
             goToMenu={goToMenu}
           />
