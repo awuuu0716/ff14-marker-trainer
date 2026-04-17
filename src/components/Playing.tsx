@@ -8,6 +8,35 @@ import {
 } from "../types";
 import MarkerDisplay from "./MarkerDisplay";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const testQuestions: Question[] = [
+  {
+    type: "D",
+    filename: "D.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+  {
+    type: "2",
+    filename: "2.png",
+    crop: "",
+  },
+];
+
 type Props = {
   stage: number;
   questions: Question[];
@@ -28,7 +57,7 @@ const Playing: FC<Props> = ({
       <div className="text-zinc-500 mb-4 font-mono text-sm tracking-widest">
         STAGE {stage} / 10
       </div>
-      <div className="flex flex-wrap justify-center gap-4 mb-4 min-h-30">
+      <div className="flex flex-wrap justify-center items-center gap-0 mb-6 min-h-50">
         {questions.map((q, idx) => (
           <MarkerDisplay
             key={`${stage}-${idx}`}

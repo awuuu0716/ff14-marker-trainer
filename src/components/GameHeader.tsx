@@ -7,9 +7,9 @@ const GameHeader = ({
 }: {
   timeLeft: number;
   status: GameStatus;
-}) => (
-  <div className="flex justify-center items-center mb-8 h-10">
-    {status === "playing" && (
+}) =>
+  status === "playing" ? (
+    <div className="flex justify-end items-center mb-8 h-10">
       <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-full border border-zinc-700">
         <TimerIcon
           size={18}
@@ -19,8 +19,7 @@ const GameHeader = ({
         />
         <span className="font-mono font-bold w-12">{timeLeft.toFixed(1)}s</span>
       </div>
-    )}
-  </div>
-);
+    </div>
+  ) : null;
 
 export default GameHeader;

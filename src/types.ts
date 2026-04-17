@@ -29,8 +29,8 @@ export const COLORS: Record<MarkerType, string> = {
 export const LEVEL_CONFIG = {
   1: {
     name: "光標初學者學堂",
-    time: 5,
-    counts: [1, 1, 1, 2, 2, 2, 3, 3, 3, 3],
+    time: 500,
+    counts: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
   },
   2: {
     name: "光標殲滅戰",

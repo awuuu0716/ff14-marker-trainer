@@ -25,7 +25,7 @@ export default function MarkerTrainer() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100 flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl min-h-125 flex flex-col">
+      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl min-h-150 flex flex-col">
         <GameHeader timeLeft={state.timeLeft} status={state.status} />
         {/* 初始畫面 */}
         {state.status === "idle" && (
