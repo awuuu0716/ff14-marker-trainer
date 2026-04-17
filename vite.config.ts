@@ -1,13 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite' // 引入插件
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(), // 加入這裡
-  ],
+  plugins: [react(), tailwindcss()],
+  // 重要：把 'your-repo-name' 換成你 GitHub 儲存庫的名字
+  // 記得前後都要有斜線，例如 '/ff14-marker-trainer/'
+  base: "/ff14-marker-trainer/",
   server: {
-    port: 3010, // 確保是在 3010 端口
-  }
-})
+    port: 3010,
+  },
+});
